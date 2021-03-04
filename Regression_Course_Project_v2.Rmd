@@ -1,0 +1,93 @@
+---
+title: "<span style='font-size: 36px'>Regression Model Course Project</span>"
+author: "Henry CY Wong"
+date: "2021-03-04"
+output: 
+    html_document:
+            css: style.css
+            keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Executive Summary
+
+The objective of this project is used to explore the relationship between a set of variables and miles per gallon (MPG) by using **mtcars** dataset and to answer:
+
+* Is an automatic or manual transmission better for MPG
+* Quantify the MPG difference between automatic and manual transmissions
+
+As an executive summary, it could be concluded that manual transmission is 7.24 MPG better than automatic transmission in average. However, it is observed that variables  weight (**wt**), gross horsepower (**hp**), number of cylinders (**cyl**) and displacement (**disp**) also have significant relationship with MPG.
+
+## 2. Exploratory Data Analysis
+
+Dataset **mtcars** is loaded and explored as below:
+
+```{r load_data}
+data(mtcars)
+str(mtcars)
+head(mtcars, 3)
+```
+
+In order to analyze whether automatic or manual transmission is better for MPG, a boxplot is used to illustrate the correlation between **mpg** and **am** as shown in *Section 4.1* and corresponding t-test is shown below:
+
+```{r t_test_mpg_am}
+mtcars$am <- factor(mtcars$am, labels = c("Auto", "Manuel"))
+t.test(mtcars[mtcars$am=="Auto",]$mpg, mtcars[mtcars$am=="Manuel",]$mpg)
+```
+
+It is observed that manual transmission is 7.24 MPG better than automatic transmission in average. The p-value is 0.001374, which is less than 0.05, indicating that it is a significant difference.
+
+## 3. Regression Model
+
+The Linear Model of **mpg** on **am** is
+
+```{r model_1}
+model_1 <- lm(mpg ~ am, data = mtcars)
+summary(model_1)
+```
+
+It is observed that although manual transmission is better than automatic transmission in MPG, Multiple R-squared is only 0.36 which indicates that only 36% of the variance could be explained. More variables are needed to be considered.
+
+According to the pairs plot shown in *Section 4.2*, it is observed that **cyl**, **disp**, **hp** and **wt** may have significant relationship to **mpg**. Thus, additional models are built as shown below for assessment:
+
+```{r compose_models}
+model_2 <- lm(mpg ~ am + wt + hp + cyl + disp, data = mtcars)
+model_3 <- lm(mpg ~ ., data = mtcars)
+```
+
+According to the ANOVA test as shown below,
+```{r anova}
+anova(model_1, model_2, model_3)
+```
+it is observed that the p-value of **model_2** (**mpg ~ am + wt + cyl + disp + hp**) is 6.809e-07, which is less than 0.05, indicating that it is significant different compared with **model_1** (**mpg ~ am**) and **model_3** (**mpg ~ .**), respectively. 
+
+The Linear Model of **model_2** is as shown below:
+
+```{r show_model_2}
+summary(model_2)
+```
+It is observed that the Multiple R-squared is 0.85 which indicates that 85% of the variance have been covered and corresponding plots for Residuals are shown in *Section 4.3*.
+
+## 4. Appendix
+
+### 4.1 Boxplot of mpg and am
+
+```{r boxplot_mpg_am}
+boxplot(mpg ~ am, data = mtcars, boxwex = 0.5,  ylab = "Miles Per Gallon", xlab = "Transmission Type")
+```
+
+### 4.2 Pairs Plot mtcars
+
+```{r [pairs]}
+pairs(mpg ~ ., lower.panel = panel.smooth, data = mtcars)
+```
+
+### 4.3 Residuals Plot of model_2
+
+```{r residual}
+par(mfrow = c(2, 2))
+plot(model_2)
+```
